@@ -5,7 +5,7 @@ import os
 from pathlib import Path
 from datetime import datetime, timedelta
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -24,10 +24,15 @@ cache = {
 async def aspi(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("stacca stacca")
 
+
+async def message_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Senpō: Muki Tensei")
+
 if __name__ == '__main__':
     app = ApplicationBuilder().token(TOKEN).build()
 
     app.add_handler(CommandHandler("aspi", aspi))
+    app.add_handler(MessageHandler(filters.ALL, message_callback))
 
     app.run_webhook(
         listen='0.0.0.0',
