@@ -35,18 +35,30 @@ frasi = [
     "Izanami",
 ]
 
+def _fmt_date(row):
+    try:
+        return datetime.strptime(f"{row['start_dd']} {row['start_hr']}", "%d/%m/%Y %H:%M").isoformat()
+    except:
+        return None
+
 def build_df_from_response(resp):
     data = resp.json()
     df = pd.DataFrame(data['events'])
-    df = df[df['c_str'].isin(["A06", "A07", "A10", "A12", "A26"])]
+    # df = df[df['c_str'].isin(["A06", "A07", "A10", "A12", "A26"])]
     df[["start_hr", "end_hr"]] = df['t_des_it'].str.extract("dalle ore ([\d\:]+) alle ore ([\d\:]+)")
-    df[["start_dd", "end_dd"]] = df['t_des_it'].str.extract("dal giorno (\d{2}/\d{2}/\d{4}) al giorno (\d{2}/\d{2}/\d{4})")
+    df[["start_dd", "end_dd"]] = df['t_des_it'].str.extract("d[ea]l giorno (\d{2}/\d{2}/\d{4}) al giorno (\d{2}/\d{2}/\d{4})")
     
-    df["start_date"] = df.apply(lambda row: datetime.strptime(f"{row['start_dd']} {row['start_hr']}", "%d/%m/%Y %H:%M").isoformat(), 
-                                axis=1)
-    df["end_date"] = df.apply(lambda row: datetime.strptime(f"{row['end_dd']} {row['end_hr']}", "%d/%m/%Y %H:%M").isoformat(), 
-                              axis=1)
-    df.sort_values(["c_str", "start_date"], inplace=True, ignore_index=True)
+    # df = df[(~df["start_dd"].isna())&(~df["start_hr"].isna())&(~df["end_dd"].isna())&(~df["end_hr"].isna())]
+    
+    try:
+        df["start_date"] = df.apply(_fmt_date, axis=1)
+        df["end_date"] = df.apply(_fmt_date, axis=1)
+        df = df[(~df["start_date"].isna()) & (~df["start_date"].isna())]
+        sort_cols = ["c_str", "start_date"] 
+    except:
+        sort_cols = ["c_str"] 
+
+    df.sort_values(sort_cols, inplace=True, ignore_index=True)
     return df
 
 
@@ -79,9 +91,11 @@ def format_events(df):
 
 
 def zeropad_a_name(a_name):
-    res = a_name.lstrip("a")
+    res = a_name.lower().lstrip("a")
     if len(res) == 1:
         res = f"A0{res}"
+    else:
+        res = f"A{res}"
     return res
 
 
@@ -89,20 +103,38 @@ async def aspi(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.info(context.args)
     now = datetime.now()
     threshold = now+timedelta(days=1)
+    put_threshold = True
     a_name = "A10"
+    whichevs = None
     if len(context.args) >= 1:
         a_name = context.args[0].upper()
+    if len(context.args) >= 2:
+        whichevs = context.args[1]
+    if whichevs and whichevs.lower() == "all":
+        put_threshold = False
+    logging.info(f"a_name start: {a_name}")
     a_name = zeropad_a_name(a_name)
     logging.info(f"a_name final: {a_name}")
     df = await fetch_aspi_updates()
-    df["start_date"] = pd.to_datetime(df["start_date"])
-    sel = df[(df["start_date"] < threshold) & (df["c_str"] == a_name)]
-    msg = f"Eventi precedenti a {threshold.strftime('%d-%m-%Y %H:%M:%S')}\n\n"
-    fmt = format_events(sel)
+    logging.info(f"fetched {len(df)} events")
+    a_df = df[df["c_str"] == a_name]
+    msg = ""
+    if "start_date" in df.columns:
+        logging.info(f"min start date: {a_df['start_date'].min()}")
+        logging.info(f"max start date: {a_df['start_date'].max()}")
+        logging.info(f"threshold date: {threshold}")
+        if put_threshold:
+            a_df["start_date"] = pd.to_datetime(df["start_date"])
+            a_df = a_df[(a_df["start_date"] < threshold)]
+            if len(a_df) > 0:
+                msg = f"Eventi precedenti a {threshold.strftime('%d-%m-%Y %H:%M:%S')}\n\n"
+            else:
+                msg = f"Nessun evento da segnalare sulla {a_name} prima del {threshold.strftime('%d-%m-%Y %H:%M:%S')}"
+        else:
+            msg = "Nessun filtro di data impostato.\n\n"
+    fmt = format_events(a_df)
     logging.info(f"message length: {len(fmt)}")
-    if not fmt:
-        msg = "No events to be notified"
-    else:
+    if fmt:
         msg += fmt
     await update.message.reply_text(msg)
 
@@ -118,7 +150,7 @@ async def message_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logging.info(msg)
     reply = {
         "and the winner is": "Kevin Teti",
-        "non toccare Teti": "quando è nero paghi scotto",
+        "non toccare teti": "quando è nero paghi scotto",
         "è il momento": "Chibaku Tensei",
         "teti": "certamente",
         "scotto": "ovviamente"
@@ -137,10 +169,13 @@ if __name__ == '__main__':
 
     app.add_handler(CommandHandler("aspi", aspi))
     app.add_handler(MessageHandler(filters.ALL, message_callback))
-
-    app.run_webhook(
-        listen='0.0.0.0',
-        port=os.getenv("PORT", 8080),
-        url_path=TOKEN,
-        webhook_url=f"https://aspi-bot-387e664a1cf9.herokuapp.com/{TOKEN}"
-    )
+    
+    if os.getenv("DEBUG"):
+        app.run_polling()
+    else:    
+        app.run_webhook(
+            listen='0.0.0.0',
+            port=os.getenv("PORT", 8080),
+            url_path=TOKEN,
+            webhook_url=f"https://aspi-bot-387e664a1cf9.herokuapp.com/{TOKEN}"
+        )
