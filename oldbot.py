@@ -95,4 +95,6 @@ if __name__ == '__main__':
 
     app.add_handler(CommandHandler("aspi", aspi))
 
-    app.run_polling()
+    app.run_webhook(
+        
+    )
