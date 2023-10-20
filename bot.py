@@ -1,6 +1,5 @@
 import telegram, os
-from telegram.ext import Updater, MessageHandler, Filters
-from telegram.ext import CommandHandler
+from telegram.ext import Updater, MessageHandler, Filters, CommandHandler
 from dictionary import get_info
 
 telegram_bot_token = "1969028284:AAF0oDjLtKoodTMiiWrIyTXkz8XqiJumy0w"
@@ -79,9 +78,11 @@ dispatcher.add_handler(CommandHandler("start", start))
 # that is not a command.
 dispatcher.add_handler(MessageHandler(Filters.text, get_word_info))
 
-
-updater.start_webhook(listen="0.0.0.0",
-                      port=int(os.environ.get('PORT', 5000)),
-                      url_path=telegram_bot_token,
-                      webhook_url= "https://aspi-bot-387e664a1cf9.herokuapp.com/" + telegram_bot_token
-                      )
+updater.start_webhook(
+    listen='0.0.0.0',
+    port=443,
+    url_path='TOKEN',
+    # key='private.key',
+    # cert='cert.pem',
+    webhook_url=f'https://aspi-bot-387e664a1cf9.herokuapp.com/{telegram_bot_token}'
+) 
