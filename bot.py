@@ -1,4 +1,4 @@
-import httpx, logging, random
+import httpx, logging, random, re
 import pandas as pd
 import json
 import os
@@ -20,20 +20,6 @@ cache = {
     "last_update": datetime.now() - CACHE_DURATION,
     "data": None
 }
-
-frasi = [
-    "And the winner is Kevin Teti",
-    "Kevin Teti",
-    "Scotto",
-    "è il momento chibaku tensei",
-    "Senpō: Muki Tensei",
-    "Senpō: Ranton Koga",
-    "Senpō: Inton Raiha",
-    "Doton: Doruku Gaeshi",
-    "Amaterasu",
-    "Susanoo",
-    "Izanami",
-]
 
 def _fmt_date(row):
     try:
@@ -103,20 +89,10 @@ def zeropad_a_name(a_name):
         res = f"A{res}"
     return res
 
-
-async def aspi(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logging.info(context.args)
+async def get_events(a_name):
     now = datetime.now()
     threshold = now+timedelta(days=1)
     put_threshold = True
-    a_name = "A10"
-    whichevs = None
-    if len(context.args) >= 1:
-        a_name = context.args[0].upper()
-    if len(context.args) >= 2:
-        whichevs = context.args[1]
-    if whichevs and whichevs.lower() == "all":
-        put_threshold = False
     logging.info(f"a_name start: {a_name}")
     a_name = zeropad_a_name(a_name)
     logging.info(f"a_name final: {a_name}")
@@ -137,37 +113,34 @@ async def aspi(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 msg = f"Nessun evento da segnalare sulla {a_name} prima del {threshold.strftime('%d-%m-%Y %H:%M:%S')}"
         else:
             msg = "Nessun filtro di data impostato.\n\n"
+    return a_df, msg
+
+
+async def aspi(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logging.info(context.args)
+    a_name = "A10"
+    if len(context.args) >= 1:
+        a_name = context.args[0].upper()
+    a_df, msg = await get_events(a_name)
     fmt = format_events(a_df)
     logging.info(f"message length: {len(fmt)}")
     if fmt:
         msg += fmt
     await update.message.reply_text(msg)
 
-senpous = [
-    "Muki Tensei",
-    "Ranton Koga",
-    "Inton Raiha",
-    "Goemon",
-    "Oodama Rasen Shuriken",
-]
+
 async def message_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.message.text.strip().lower()
-    logging.info(msg)
-    reply = {
-        "and the winner is": "Kevin Teti",
-        "non toccare teti": "quando è nero paghi scotto",
-        "è il momento": "Chibaku Tensei",
-        "teti": "certamente",
-        "scotto": "ovviamente"
-    }
-    if msg == "senpo":
-        resp = random.choice(senpous)
-    else:    
-        try:
-            resp = reply[msg.lower()]
-        except KeyError:
-            resp = "Gatoringa"
-    await update.message.reply_text(resp)
+    if re.match(r"^a\d+$", msg):
+        a_name = zeropad_a_name(msg)
+        a_df, resp_msg = await get_events(a_name)
+        fmt = format_events(a_df)
+        logging.info(f"message length: {len(fmt)}")
+        if fmt:
+            resp_msg += fmt
+    else:
+        resp_msg = "Dimmi un'autostrada"
+    await update.message.reply_text(resp_msg)
 
 if __name__ == '__main__':
     app = ApplicationBuilder().token(TOKEN).build()
