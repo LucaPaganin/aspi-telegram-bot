@@ -1,6 +1,7 @@
 import httpx, logging
 import pandas as pd
 import json
+import os
 from pathlib import Path
 from datetime import datetime, timedelta
 from telegram import Update
@@ -30,7 +31,7 @@ if __name__ == '__main__':
 
     app.run_webhook(
         listen='0.0.0.0',
-        port=443,
+        port=os.getenv("PORT", 8080),
         url_path=TOKEN,
         webhook_url=f"https://aspi-bot-387e664a1cf9.herokuapp.com/{TOKEN}"
     )
