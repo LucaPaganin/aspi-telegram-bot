@@ -1,98 +1,87 @@
-import httpx, logging
-import pandas as pd
-import json
-from pathlib import Path
-from datetime import datetime, timedelta
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+import telegram, os
+from telegram.ext import Updater, MessageHandler, Filters
+from telegram.ext import CommandHandler
+from dictionary import get_info
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+telegram_bot_token = "1969028284:AAF0oDjLtKoodTMiiWrIyTXkz8XqiJumy0w"
 
-TOKEN = "1969028284:AAF0oDjLtKoodTMiiWrIyTXkz8XqiJumy0w"
-CACHE_DURATION = timedelta(minutes=5)
-GROUPID = -4080210648
-
-cache = {
-    "last_update": datetime.now() - CACHE_DURATION,
-    "data": None
-}
-
-def build_df_from_response(resp):
-    data = resp.json()
-    df = pd.DataFrame(data['events'])
-    df = df[df['c_str'].isin(["A06", "A07", "A10", "A12", "A26"])]
-    df[["start_hr", "end_hr"]] = df['t_des_it'].str.extract("dalle ore ([\d\:]+) alle ore ([\d\:]+)")
-    df[["start_dd", "end_dd"]] = df['t_des_it'].str.extract("dal giorno (\d{2}/\d{2}/\d{4}) al giorno (\d{2}/\d{2}/\d{4})")
-    
-    df["start_date"] = df.apply(lambda row: datetime.strptime(f"{row['start_dd']} {row['start_hr']}", "%d/%m/%Y %H:%M").isoformat(), 
-                                axis=1)
-    df["end_date"] = df.apply(lambda row: datetime.strptime(f"{row['end_dd']} {row['end_hr']}", "%d/%m/%Y %H:%M").isoformat(), 
-                              axis=1)
-    df.sort_values(["c_str", "start_date"], inplace=True, ignore_index=True)
-    return df
+updater = Updater(token=telegram_bot_token, use_context=True)
+dispatcher = updater.dispatcher
 
 
-async def fetch_aspi_updates():
-    now = datetime.now()
-    dt = now - cache["last_update"]
-    if (dt <= CACHE_DURATION) or cache["data"] is None:
-        logging.info("fetching updates from aspi")
-        async with httpx.AsyncClient() as client:
-            r = await client.get("https://viabilita.autostrade.it/json/previsioni.json")
-        cache["data"] = build_df_from_response(r)
-        fdata = {
-            "last_update": cache["last_update"].isoformat(),
-            "data": cache["data"].to_dict()
-        }
-        Path("cache.json").write_text(json.dumps(fdata, indent=2))
-        
-    return cache["data"]
+# set up the introductory statement for the bot when the /start command is invoked
+def start(update, context):
+    chat_id = update.effective_chat.id
+    context.bot.send_message(chat_id=chat_id, text="Hello there. Provide any English word and I will give you a bunch "
+                                                   "of information about it.")
 
 
-def format_events(df):
-    roads = df["c_str"].unique().tolist()
-    s = ""
-    for r in roads:
-        s += f"Eventi sulla {r}:\n\n"
-        sel = df[df["c_str"] == r]
-        for text in sel["t_des_it"].values:
-            s +=f"- {text}\n"
-    return s
+# obtain the information of the word provided and format before presenting.
+def get_word_info(update, context):
+    # get the word info
+    word_info = get_info(update.message.text)
 
-def zeropad_a_name(a_name):
-    res = a_name.lstrip("a")
-    if len(res) == 1:
-        res = f"A0{res}"
-    return res
+    # If the user provides an invalid English word, return the custom response from get_info() and exit the function
+    if word_info.__class__ is str:
+        update.message.reply_text(word_info)
+        return
+
+    # get the word the user provided
+    word = word_info['word']
+
+    # get the origin of the word
+    origin = word_info['origin']
+    meanings = '\n'
+
+    synonyms = ''
+    definition = ''
+    example = ''
+    antonyms = ''
+
+    # a word may have several meanings. We'll use this counter to track each of the meanings provided from the response
+    meaning_counter = 1
+
+    for word_meaning in word_info['meanings']:
+        meanings += 'Meaning ' + str(meaning_counter) + ':\n'
+
+        for word_definition in word_meaning['definitions']:
+            # extract the each of the definitions of the word
+            definition = word_definition['definition']
+
+            # extract each example for the respective definition
+            if 'example' in word_definition:
+                example = word_definition['example']
+
+            # extract the collection of synonyms for the word based on the definition
+            for word_synonym in word_definition['synonyms']:
+                synonyms += word_synonym + ', '
+
+            # extract the antonyms of the word based on the definition
+            for word_antonym in word_definition['antonyms']:
+                antonyms += word_antonym + ', '
+
+        meanings += 'Definition: ' + definition + '\n\n'
+        meanings += 'Example: ' + example + '\n\n'
+        meanings += 'Synonym: ' + synonyms + '\n\n'
+        meanings += 'Antonym: ' + antonyms + '\n\n\n'
+
+        meaning_counter += 1
+
+    # format the data into a string
+    message = f"Word: {word}\n\nOrigin: {origin}\n{meanings}"
+
+    update.message.reply_text(message)
+
+# run the start function when the user invokes the /start command 
+dispatcher.add_handler(CommandHandler("start", start))
+
+# invoke the get_word_info function when the user sends a message 
+# that is not a command.
+dispatcher.add_handler(MessageHandler(Filters.text, get_word_info))
 
 
-async def aspi(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    logging.info(context.args)
-    now = datetime.now()
-    threshold = now+timedelta(days=1)
-    a_name = "A10"
-    if len(context.args) >= 1:
-        a_name = context.args[0].upper()
-    a_name = zeropad_a_name(a_name)
-    logging.info(f"a_name final: {a_name}")
-    df = await fetch_aspi_updates()
-    df["start_date"] = pd.to_datetime(df["start_date"])
-    sel = df[(df["start_date"] < threshold) & (df["c_str"] == a_name)]
-    msg = f"Eventi precedenti a {threshold.strftime('%d-%m-%Y %H:%M:%S')}\n\n"
-    fmt = format_events(sel)
-    logging.info(f"message length: {len(fmt)}")
-    if not fmt:
-        msg = "No events to be notified"
-    else:
-        msg += fmt
-    await update.message.reply_text(msg)
-
-if __name__ == '__main__':
-    app = ApplicationBuilder().token(TOKEN).build()
-
-    app.add_handler(CommandHandler("aspi", aspi))
-
-    app.run_polling()
+updater.start_webhook(listen="0.0.0.0",
+                      port=int(os.environ.get('PORT', 5000)),
+                      url_path=telegram_bot_token,
+                      webhook_url=  + telegram_bot_token
+                      )
