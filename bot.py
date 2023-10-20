@@ -26,6 +26,7 @@ async def aspi(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def message_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logging.info(update.message.text)
     await update.message.reply_text("Senpō: Muki Tensei")
 
 if __name__ == '__main__':
