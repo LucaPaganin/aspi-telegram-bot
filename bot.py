@@ -41,23 +41,19 @@ def _fmt_date(row):
     except:
         return None
 
-def build_df_from_response(resp):
-    data = resp.json()
-    df = pd.DataFrame(data['events'])
-    # df = df[df['c_str'].isin(["A06", "A07", "A10", "A12", "A26"])]
+def extract_dates(df):
     df[["start_hr", "end_hr"]] = df['t_des_it'].str.extract("dalle ore ([\d\:]+) alle ore ([\d\:]+)")
     df[["start_dd", "end_dd"]] = df['t_des_it'].str.extract("d[ea]l giorno (\d{2}/\d{2}/\d{4}) al giorno (\d{2}/\d{2}/\d{4})")
     
-    # df = df[(~df["start_dd"].isna())&(~df["start_hr"].isna())&(~df["end_dd"].isna())&(~df["end_hr"].isna())]
-    
-    try:
-        df["start_date"] = df.apply(_fmt_date, axis=1)
-        df["end_date"] = df.apply(_fmt_date, axis=1)
-        df = df[(~df["start_date"].isna()) & (~df["start_date"].isna())]
-        sort_cols = ["c_str", "start_date"] 
-    except:
-        sort_cols = ["c_str"] 
+    df["start_date"] = df.apply(_fmt_date, axis=1)
+    df["end_date"] = df.apply(_fmt_date, axis=1)
+    df = df[(~df["start_date"].isna()) & (~df["start_date"].isna())]
 
+def build_df_from_response(resp):
+    data = resp.json()
+    df = pd.DataFrame(data['events'])
+    df['start_date'] = df['d_agg'].apply(lambda x: datetime.fromtimestamp(x/1000).isoformat())
+    sort_cols = ["c_str", "start_date"]
     df.sort_values(sort_cols, inplace=True, ignore_index=True)
     return df
 
@@ -68,7 +64,8 @@ async def fetch_aspi_updates():
     if (dt <= CACHE_DURATION) or cache["data"] is None:
         logging.info("fetching updates from aspi")
         async with httpx.AsyncClient() as client:
-            r = await client.get("https://viabilita.autostrade.it/json/previsioni.json")
+            r = await client.get("https://viabilita.autostrade.it/json/eventi.json")
+            # previsions = await client.get("https://viabilita.autostrade.it/json/previsioni.json")
         cache["data"] = build_df_from_response(r)
         fdata = {
             "last_update": cache["last_update"].isoformat(),
