@@ -64,9 +64,17 @@ async def fetch_aspi_updates():
     if (dt <= CACHE_DURATION) or cache["data"] is None:
         logging.info("fetching updates from aspi")
         async with httpx.AsyncClient() as client:
-            r = await client.get("https://viabilita.autostrade.it/json/eventi.json")
-            # previsions = await client.get("https://viabilita.autostrade.it/json/previsioni.json")
-        cache["data"] = build_df_from_response(r)
+            events = await client.get("https://viabilita.autostrade.it/json/eventi.json")
+            forecasts = await client.get("https://viabilita.autostrade.it/json/previsioni.json")
+        events = build_df_from_response(events)
+        forecasts = build_df_from_response(forecasts)
+        try:
+            extract_dates(forecasts)
+        except:
+            pass
+        tot = pd.concat([events, forecasts])
+        tot = tot.reset_index()
+        cache["data"] = tot
         fdata = {
             "last_update": cache["last_update"].isoformat(),
             "data": cache["data"].to_dict()
@@ -117,8 +125,8 @@ async def aspi(update: Update, context: ContextTypes.DEFAULT_TYPE):
     a_df = df[df["c_str"] == a_name]
     msg = ""
     if "start_date" in df.columns:
-        logging.info(f"min start date: {a_df['start_date'].min()}")
-        logging.info(f"max start date: {a_df['start_date'].max()}")
+        logging.info(f"min start date: {a_df['start_date'].iloc[0]}")
+        logging.info(f"max start date: {a_df['start_date'].iloc[-1]}")
         logging.info(f"threshold date: {threshold}")
         if put_threshold:
             a_df["start_date"] = pd.to_datetime(df["start_date"])
