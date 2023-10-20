@@ -101,8 +101,6 @@ async def get_events(a_name):
     a_df = df[df["c_str"] == a_name]
     msg = ""
     if "start_date" in df.columns:
-        logging.info(f"min start date: {a_df['start_date'].iloc[0]}")
-        logging.info(f"max start date: {a_df['start_date'].iloc[-1]}")
         logging.info(f"threshold date: {threshold}")
         if put_threshold:
             a_df["start_date"] = pd.to_datetime(df["start_date"])
