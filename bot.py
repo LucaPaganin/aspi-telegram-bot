@@ -76,8 +76,13 @@ def format_events(df):
     for r in roads:
         s += f"Eventi sulla {r}:\n\n"
         sel = df[df["c_str"] == r]
-        for text in sel["t_des_it"].values:
-            s +=f"- {text}\n"
+        for i, row in sel.iterrows():
+            desc = row["t_des_it"]
+            msg = f"- {desc}"
+            if "start_date" in row:
+                msg += f" ({row['start_date']})"
+            msg += "\n"
+            s += msg
     return s
 
 
