@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 from datetime import datetime, timedelta
+from automap_fetcher import AutomapFetcher
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 
@@ -109,7 +110,7 @@ async def get_events(a_name):
         logging.info(f"threshold date: {threshold}")
         if put_threshold:
             a_df["start_date"] = pd.to_datetime(df["start_date"])
-            a_df = a_df[(a_df["start_date"] < threshold)]
+            a_df = a_df[(a_df["start_date"] >= now) & (a_df["start_date"] < threshold)]
             if len(a_df) > 0:
                 msg = f"Eventi precedenti a {threshold.strftime('%d-%m-%Y %H:%M:%S')}\n\n"
             else:
@@ -132,18 +133,38 @@ async def aspi(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(msg)
 
 
+fetcher = AutomapFetcher()
+
+
 async def message_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.message.text.strip().lower()
     if re.match(r"^a\d+$", msg):
         a_name = zeropad_a_name(msg)
-        a_df, resp_msg = await get_events(a_name)
-        fmt = format_events(a_df)
-        logging.info(f"message length: {len(fmt)}")
-        if fmt:
-            resp_msg += fmt
+        traffic, update_time = await fetcher.getTrafficEvents(a_name)
+        closures = await fetcher.getClosureEvents(a_name)
+        if not update_time:
+            update_time = traffic["start_date"].max()
+            logging.warning("Could not parse update time from web page")
+        sel = traffic["start_date"] >= (update_time - timedelta(hours=4))
+        traffic = traffic[sel]        
+        resp_msg = f"Traffico: ultimo aggiornamento alle {update_time.strftime('%H:%M')}\n\n"
+        resp_msg += f"Eventi da segnalare: {len(traffic)}\n\n"
+        for i, row in traffic.iterrows():
+            resp_msg += f"- {row['start_date']} \n\t{row['desc']}\n\n"
+        resp_msg += "\n"
+        await update.message.reply_text(resp_msg)
+        resp_msg = f"Chiusure programmate: {len(closures)}\n"
+        for i, row in closures.iterrows():
+            resp_msg += f"- {row['start_date']} \n\t{row['desc']}\n\n"
+        await update.message.reply_text(resp_msg)
+        # a_df, resp_msg = await get_events(a_name)
+        # fmt = format_events(a_df)
+        # logging.info(f"message length: {len(fmt)}")
+        # if fmt:
+        #     resp_msg += fmt
     else:
         resp_msg = "Dimmi un'autostrada"
-    await update.message.reply_text(resp_msg)
+        await update.message.reply_text(resp_msg)
 
 if __name__ == '__main__':
     app = ApplicationBuilder().token(TOKEN).build()

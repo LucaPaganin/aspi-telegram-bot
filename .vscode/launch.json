@@ -5,6 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python: Debug",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/debug.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "Python: Aspi Bot",
             "type": "python",
             "request": "launch",
