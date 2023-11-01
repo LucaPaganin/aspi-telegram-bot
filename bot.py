@@ -139,7 +139,7 @@ fetcher = AutomapFetcher()
 async def message_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.message.text.strip().lower()
     if re.match(r"^a\d+$", msg):
-        a_name = zeropad_a_name(msg)
+        a_name = msg.lower()
         traffic, update_time = await fetcher.getTrafficEvents(a_name)
         closures = await fetcher.getClosureEvents(a_name)
         if not update_time:
@@ -153,15 +153,11 @@ async def message_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             resp_msg += f"- {row['start_date']} \n\t{row['desc']}\n\n"
         resp_msg += "\n"
         await update.message.reply_text(resp_msg)
+        
         resp_msg = f"Chiusure programmate: {len(closures)}\n"
         for i, row in closures.iterrows():
             resp_msg += f"- {row['start_date']} \n\t{row['desc']}\n\n"
         await update.message.reply_text(resp_msg)
-        # a_df, resp_msg = await get_events(a_name)
-        # fmt = format_events(a_df)
-        # logging.info(f"message length: {len(fmt)}")
-        # if fmt:
-        #     resp_msg += fmt
     else:
         resp_msg = "Dimmi un'autostrada"
         await update.message.reply_text(resp_msg)
