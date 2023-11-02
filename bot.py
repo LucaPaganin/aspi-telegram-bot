@@ -1,3 +1,4 @@
+import traceback
 import httpx, logging, random, re
 import pandas as pd
 import json
@@ -139,27 +140,31 @@ fetcher = AutomapFetcher()
 async def message_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.message.text.strip().lower()
     if re.match(r"^a\d+$", msg):
-        a_name = msg.lower()
-        traffic, update_time = await fetcher.getTrafficEvents(a_name)
-        closures = await fetcher.getClosureEvents(a_name)
-        if not update_time:
-            update_time = traffic["start_date"].max()
-            logging.warning("Could not parse update time from web page")
-        sel = traffic["start_date"] >= (update_time - timedelta(hours=4))
-        traffic = traffic[sel]        
-        resp_msg = f"Traffico: ultimo aggiornamento alle {update_time.strftime('%H:%M')}\n\n"
-        resp_msg += f"Eventi da segnalare: {len(traffic)}\n\n"
-        for i, row in traffic.iterrows():
-            resp_msg += f"- {row['start_date']} \n\t{row['desc']}\n\n"
-        resp_msg += "\n"
-        await update.message.reply_text(resp_msg)
-        
-        resp_msg = f"Chiusure programmate: {len(closures)}\n"
-        for i, row in closures.iterrows():
-            resp_msg += f"- {row['start_date']} \n\t{row['desc']}\n\n"
-        await update.message.reply_text(resp_msg)
+        try:
+            a_name = msg.lower()
+            traffic, update_time = await fetcher.getTrafficEvents(a_name)
+            closures = await fetcher.getClosureEvents(a_name)
+            if not update_time:
+                update_time = traffic["start_date"].max()
+                logging.warning("Could not parse update time from web page")
+            sel = traffic["start_date"] >= (update_time - timedelta(hours=4))
+            traffic = traffic[sel]        
+            resp_msg = f"Traffico: ultimo aggiornamento alle {update_time.strftime('%H:%M')}\n\n"
+            resp_msg += f"Eventi da segnalare: {len(traffic)}\n\n"
+            for i, row in traffic.iterrows():
+                resp_msg += f"- {row['start_date']} \n\t{row['desc']}\n\n"
+            resp_msg += "\n"
+            await update.message.reply_text(resp_msg)
+            
+            resp_msg = f"Chiusure programmate: {len(closures)}\n"
+            for i, row in closures.iterrows():
+                resp_msg += f"- {row['start_date']} \n\t{row['desc']}\n\n"
+            await update.message.reply_text(resp_msg)
+        except:
+            resp_msg = f"An error occurred: {traceback.format_exc()}"
+            await update.message.reply_text(resp_msg)
     else:
-        resp_msg = "Dimmi un'autostrada"
+        resp_msg = "Dimmi un'autostrada, ad esempio A10, A12, A7, A1"
         await update.message.reply_text(resp_msg)
 
 if __name__ == '__main__':

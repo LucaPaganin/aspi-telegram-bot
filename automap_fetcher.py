@@ -60,12 +60,21 @@ class AutomapFetcher(object):
     def parseClosureEvent(self, e):
         lines = [l.strip() for l in e.get_text().splitlines() if l.strip()]
         fulltext = "".join(lines)
-        hours = re.findall(r"d?alle ore ([\d\:]+)", fulltext)
-        days  = re.findall(r"d?al giorno ([\d/]+)", fulltext)
-        t1 = datetime.strptime(f"{days[0]} {hours[0]}", "%d/%m/%Y %H:%M")
-        t2 = datetime.strptime(f"{days[1]} {hours[1]}", "%d/%m/%Y %H:%M")
+        t1 = None
+        t2 = None
+        hours = re.findall(r" (\d{2}\:\d{2}) ", fulltext)
+        days  = re.findall(r" (\d{2}/\d{2}/\d{4}) ", fulltext)
+        try:
+            t1 = datetime.strptime(f"{days[0]} {hours[0]}", "%d/%m/%Y %H:%M")
+            t2 = datetime.strptime(f"{days[1]} {hours[1]}", "%d/%m/%Y %H:%M")
+        except IndexError:
+            pass
         desc = "\n".join(lines)
         return desc, t1, t2
+    
+    def _parseClosureDatetimes(self, text):
+        
+        pass
     
     def parseTrafficEvents(self, res: "httpx.Response"):
         if res.status_code != 200:
