@@ -135,19 +135,27 @@ class AutomapFetcher(object):
         return chunks
     
     def formatClosureEvents(self, closures, update_time, ndays_next):
-        threshold = update_time + timedelta(days=ndays_next)
-        df = closures[closures["start_day"] <= threshold.date()]
-        grouped = df.groupby("start_day")
-        dates = list(grouped.groups)
-        evsep = "\n\n"
-        parts = [
-            f"Chiusure da segnalare nei prossimi {ndays_next} giorni: {len(df)}"
-        ]
-        for date in dates:
-            header = f"Chiusure del {date.strftime('%d/%m/%Y')}"
-            i_rows = list(grouped.get_group(date).iterrows())
-            parts.append(f"{header}{evsep}- {i_rows[0][1]['desc']}")
-            for i, row in i_rows[1:]:
+        try:
+            threshold = update_time + timedelta(days=ndays_next)
+            df = closures[closures["start_day"] <= threshold.date()]
+            grouped = df.groupby("start_day")
+            dates = list(grouped.groups)
+            evsep = "\n\n"
+            parts = [
+                f"Chiusure da segnalare nei prossimi {ndays_next} giorni: {len(df)}"
+            ]
+            for date in dates:
+                header = f"Chiusure del {date.strftime('%d/%m/%Y')}"
+                i_rows = list(grouped.get_group(date).iterrows())
+                parts.append(f"{header}{evsep}- {i_rows[0][1]['desc']}")
+                for i, row in i_rows[1:]:
+                    parts.append(f"- {row['desc']}")
+        except:
+            df = closures
+            parts = [
+                f"Chiusure da segnalare nei prossimi giorni: {len(df)}"
+            ]
+            for i, row in df.iterrows():
                 parts.append(f"- {row['desc']}")
         chunks = create_message_chunks(parts, chunklen=2048)
         return chunks
