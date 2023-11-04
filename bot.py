@@ -1,7 +1,6 @@
 import traceback
 import httpx, logging, random, re
 import pandas as pd
-import dotenv
 import os
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -15,6 +14,7 @@ logging.basicConfig(
 )
 
 try:
+    import dotenv
     dotenv.load_dotenv(".env")
 except:
     pass
