@@ -10,8 +10,9 @@ from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, Messa
 
 THISFILE = Path(__file__)
 try:
-    allroads = json.loads((THISFILE.parent / "aux/roads.json").read_text())
+    from roads import roads as allroads
 except:
+    logging.error(traceback.format_exc())
     allroads = {}
 
 logging.basicConfig(

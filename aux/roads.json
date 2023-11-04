@@ -1,0 +1,131 @@
+{
+    "A1 Milano-Napoli": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a1"
+    },
+    "A2 Salerno-Reggio Calabria": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a2"
+    },
+    "A3 Napoli-Salerno": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a3"
+    },
+    "A4 Torino-Trieste": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a4"
+    },
+    "A5 Torino-Aosta M.Bianco": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a5"
+    },
+    "A6 Torino-Savona": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a6"
+    },
+    "A7 Milano-Genova": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a7"
+    },
+    "A8 Milano-Varese": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a8"
+    },
+    "A9 Lainate-Como-Chiasso": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a9"
+    },
+    "A10 Genova-Ventimiglia": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a10"
+    },
+    "A11 Firenze-Pisa": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a11"
+    },
+    "A12 Genova-Roma": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a12"
+    },
+    "A13 Bologna-Padova": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a13"
+    },
+    "A14 Bologna-Taranto": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a14"
+    },
+    "A15 Parma-La Spezia": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a15"
+    },
+    "A16 Napoli-Canosa": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a16"
+    },
+    "A18 Messina-Catania": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a18"
+    },
+    "A19 Palermo-Catania": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a19"
+    },
+    "A20 Messina-Palermo": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a20"
+    },
+    "A21 Torino-Brescia": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a21"
+    },
+    "A22 Brennero-Modena": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a22"
+    },
+    "A23 Palmanova-Tarvisio": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a23"
+    },
+    "A24 Roma-L'Aquila-Teramo": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a24"
+    },
+    "A25 Torano-Pescara": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a25"
+    },
+    "A26 Genova-Gravellona Toce": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a26"
+    },
+    "A27 Venezia Mestre-Belluno": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a27"
+    },
+    "A28 Portogruaro-Conegliano": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a28"
+    },
+    "A29 Palermo-Mazara del Vallo": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a29"
+    },
+    "A30 Caserta-Salerno": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a30"
+    },
+    "A31 Rovigo-Piovene Rocchette": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a31"
+    },
+    "A32 Torino-Bardonecchia": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a32"
+    },
+    "A33 Asti-Cuneo": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a33"
+    },
+    "A34 Villesse-Gorizia": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a34"
+    },
+    "A35 BRE-BE-MI Brescia-Milano": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a35"
+    },
+    "A36 Pedemontana Lombarda": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-a36"
+    },
+    "A50 Tangenziale Milano Ovest": {
+      "map": "https://www.automap.it/autostrade/mappa-tangenziale-milano-ovest-a50"
+    },
+    "A51 Tangenziale Milano Est": {
+      "map": "https://www.automap.it/autostrade/mappa-tangenziale-milano-est-a51"
+    },
+    "A52 Tangenziale Milano Nord": {
+      "map": "https://www.automap.it/autostrade/mappa-tangenziale-milano-nord-a52"
+    },
+    "A55 Tangenziale Torino Nord-Sud": {
+      "map": "https://www.automap.it/autostrade/mappa-tangenziale-torino-a55"
+    },
+    "A56 Tangenziale Napoli": {
+      "map": "https://www.automap.it/autostrade/mappa-tangenziale-napoli-a56"
+    },
+    "A57 Tangenziale Mestre": {
+      "map": "https://www.automap.it/autostrade/mappa-tangenziale-mestre-a57"
+    },
+    "A58 Tangenziale Milano Est-Esterna": {
+      "map": "https://www.automap.it/autostrade/mappa-tangenziale-milano-est-esterna-a58"
+    },
+    "A91 Roma - Fiumicino": {
+      "map": "https://www.automap.it/autostrade/mappa-autostrada-roma-fiumicino-a91"
+    }
+  }
