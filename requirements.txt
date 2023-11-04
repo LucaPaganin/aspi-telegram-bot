@@ -1,4 +1,4 @@
 python-telegram-bot[webhooks]
 pandas
 bs4
-dotenv
+python-dotenv
