@@ -1,7 +1,7 @@
-import httpx, re, pandas as pd
+import httpx, re, pandas as pd, logging
 from bs4 import BeautifulSoup
-from datetime import datetime
-from utils import MONTHMAP_ITA_ENG, RoadEvent, validateRoadName, MONTHS
+from datetime import datetime, timedelta
+from utils import MONTHMAP_ITA_ENG, RoadEvent, validateRoadName, MONTHS, create_message_chunks
 
 class AutomapFetcher(object):
     def __init__(self) -> None:
@@ -55,7 +55,9 @@ class AutomapFetcher(object):
             desc, t1, t2 = self.parseClosureEvent(e)
             rev = RoadEvent(start_date=t1, road_name=road_name, desc=desc, end_date=t2, evtype="closure")
             closures.append(rev.to_dict())
-        return self._createDf(closures, sortasc=True)
+        df = self._createDf(closures, sortasc=True)
+        
+        return df
     
     def parseClosureEvent(self, e):
         lines = [l.strip() for l in e.get_text().splitlines() if l.strip()]
@@ -71,10 +73,6 @@ class AutomapFetcher(object):
             pass
         desc = "\n".join(lines)
         return desc, t1, t2
-    
-    def _parseClosureDatetimes(self, text):
-        
-        pass
     
     def parseTrafficEvents(self, res: "httpx.Response"):
         if res.status_code != 200:
@@ -120,5 +118,36 @@ class AutomapFetcher(object):
         if "start_date" in df.columns:
             df["start_date"] = pd.to_datetime(df["start_date"])
             df.sort_values("start_date", inplace=True, ignore_index=True, ascending=sortasc)
+            df["start_day"] = df["start_date"].dt.date
         return df
     
+    def formatTrafficEvents(self, idf, update_time, past_hours):
+        evsep = "\n\n"
+        traffic = idf[idf["evtype"] == "traffic"]
+        logging.info(f"Found {len(traffic)} events for update_time {update_time}")
+        parts = [
+            f"Traffico: ultimo aggiornamento alle {update_time.strftime('%H:%M')}\n"+\
+            f"Eventi delle ultime {past_hours} ore da segnalare: {len(traffic)}"
+        ]
+        for i, row in traffic.iterrows():
+            parts.append(f"- {row['start_date']} \n\t{row['desc']}")
+        chunks = create_message_chunks(parts, sep=evsep)
+        return chunks
+    
+    def formatClosureEvents(self, closures, update_time, ndays_next):
+        threshold = update_time + timedelta(days=ndays_next)
+        df = closures[closures["start_day"] <= threshold.date()]
+        grouped = df.groupby("start_day")
+        dates = list(grouped.groups)
+        evsep = "\n\n"
+        parts = [
+            f"Chiusure da segnalare nei prossimi {ndays_next} giorni: {len(df)}"
+        ]
+        for date in dates:
+            header = f"Chiusure del {date.strftime('%d/%m/%Y')}"
+            i_rows = list(grouped.get_group(date).iterrows())
+            parts.append(f"{header}{evsep}- {i_rows[0][1]['desc']}")
+            for i, row in i_rows[1:]:
+                parts.append(f"- {row['desc']}")
+        chunks = create_message_chunks(parts, chunklen=2048)
+        return chunks

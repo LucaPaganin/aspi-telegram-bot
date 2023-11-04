@@ -1,5 +1,5 @@
 from datetime import datetime
-import json, re
+import json, re, logging
 
 MONTHMAP_ITA_ENG = {
     "gennaio": "january",
@@ -63,5 +63,33 @@ class RoadEvent(object):
     def __str__(self):
         return self.__repr__()
 
-def format_events_df(df):
-    pass
+
+def create_message_chunks(parts, sep="\n\n", chunklen=1024):
+    chunks = []
+    chunk = ""
+    for i, part in enumerate(parts):
+        logging.info(f"processing part {i+1}/{len(parts)}")
+        if (len(chunk) + len(part)) >= chunklen:
+            chunks.append(chunk)
+            chunk = (part + sep)
+        else:
+            chunk += (part + sep)
+            if i == len(parts)-1:
+                chunks.append(chunk)
+    return chunks
+
+
+def split_message_chunks(text, sep="\n\n", chunklen=1024):
+    logging.info(f"received text of length {len(text)}")
+    chunks = []
+    chunk = ""
+    parts = text.split(sep)
+    for i, part in enumerate(parts):
+        logging.info(f"processing part {i+1}/{len(parts)}")
+        if len(chunk) < chunklen:
+            chunk += (part + sep)
+        else:
+            chunks.append(chunk)
+            chunk = ""
+    logging.info(f"resulting {len(chunks)} chunks for msg of length {len(text)}")
+    return chunks
