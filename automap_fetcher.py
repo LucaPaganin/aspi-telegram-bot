@@ -1,4 +1,4 @@
-import httpx, re, pandas as pd, logging
+import httpx, re, pandas as pd, logging, os
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 from utils import MONTHMAP_ITA_ENG, RoadEvent, validateRoadName, MONTHS, create_message_chunks
@@ -6,7 +6,7 @@ from utils import MONTHMAP_ITA_ENG, RoadEvent, validateRoadName, MONTHS, create_
 class AutomapFetcher(object):
     def __init__(self) -> None:
         self.last_update = None
-        self._base_url = "https://automap.it"
+        self._base_url = os.environ["ASPI_SOURCE_URL"]
     
     def makeSyncRequest(self, method, url, **kwargs):
         kwargs["follow_redirects"] = True

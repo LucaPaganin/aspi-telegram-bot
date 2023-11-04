@@ -68,7 +68,6 @@ def create_message_chunks(parts, sep="\n\n", chunklen=1024):
     chunks = []
     chunk = ""
     for i, part in enumerate(parts):
-        logging.info(f"processing part {i+1}/{len(parts)}")
         if (len(chunk) + len(part)) >= chunklen:
             chunks.append(chunk)
             chunk = (part + sep)

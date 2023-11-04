@@ -1,7 +1,7 @@
 import traceback
 import httpx, logging, random, re
 import pandas as pd
-import json
+import dotenv
 import os
 from pathlib import Path
 from datetime import datetime, timedelta
@@ -14,15 +14,13 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-TOKEN = os.getenv("TOKEN", "1969028284:AAF0oDjLtKoodTMiiWrIyTXkz8XqiJumy0w")
-CACHE_DURATION = timedelta(minutes=5)
-GROUPID = -4080210648
+try:
+    dotenv.load_dotenv(".env")
+except:
+    pass
 
-cache = {
-    "last_update": datetime.now() - CACHE_DURATION,
-    "data": None
-}
-
+ISDEBUG = "DEBUG" in os.environ
+TOKEN = os.environ["TOKEN"]
 
 fetcher = AutomapFetcher()
 
@@ -63,12 +61,12 @@ async def message_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 if __name__ == '__main__':
     app = ApplicationBuilder().token(TOKEN).build()
     app.add_handler(MessageHandler(filters.ALL, message_callback))
-    if os.getenv("DEBUG"):
+    if ISDEBUG:
         app.run_polling()
     else:    
         app.run_webhook(
             listen='0.0.0.0',
             port=os.getenv("PORT", 8080),
             url_path=TOKEN,
-            webhook_url=f"https://aspi-bot-387e664a1cf9.herokuapp.com/{TOKEN}"
+            webhook_url=f"{os.environ['HEROKU_URL']}/{TOKEN}"
         )
