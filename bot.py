@@ -1,5 +1,5 @@
 import traceback
-import httpx, logging, random, re
+import httpx, logging, random, re, json
 import pandas as pd
 import os
 from pathlib import Path
@@ -7,6 +7,12 @@ from datetime import datetime, timedelta
 from automap_fetcher import AutomapFetcher
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
+
+THISFILE = Path(__file__)
+try:
+    allroads = json.loads((THISFILE.parent / "aux/roads.json").read_text())
+except:
+    allroads = {}
 
 logging.basicConfig(
     format='%(asctime)s - [%(name)s - %(levelname)s] [%(funcName)s l %(lineno)s] - %(message)s',
@@ -58,8 +64,16 @@ async def message_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         resp_msg = "Dimmi un'autostrada, ad esempio A10, A12, A7, A1"
         await update.message.reply_text(resp_msg)
 
+
+async def list_roads(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    resp_msg = "Lista autostrade:\n\n"
+    for road in allroads:
+        resp_msg += f"- {road}\n"
+    await update.message.reply_text(resp_msg)
+
 if __name__ == '__main__':
     app = ApplicationBuilder().token(TOKEN).build()
+    app.add_handler(CommandHandler("lista", list_roads))
     app.add_handler(MessageHandler(filters.ALL, message_callback))
     if ISDEBUG:
         app.run_polling()
