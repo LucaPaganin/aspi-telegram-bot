@@ -32,10 +32,17 @@ TOKEN = os.environ["TOKEN"]
 fetcher = AutomapFetcher()
 
 async def message_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        userinfo = update.effective_user
+        logging.info(f"Received new message from user {userinfo}")
+        logging.info(f"Chat information {update.effective_chat}")
+    except:
+        logging.warning(f"Problem in retrieving user information")
+    
     past_hours = 3
     ndays_next = 3
     inputmsg = update.message.text.strip().lower()
-    m = re.match(r"^(a\d+)(.*)$", inputmsg) 
+    m = re.match(r"^(a\d+)(.*)$", inputmsg)
     if m:
         try:
             args = m.groups()
@@ -56,11 +63,11 @@ async def message_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             for i, msg in enumerate(closure_messages):
                 await update.message.reply_text(f"{msg}\npagina {i+1}/{len(closure_messages)}")
         except:
-            resp_msg = f"An error occurred with your message: '{inputmsg}'"
+            errmsg = f"An error occurred with your message: '{inputmsg}'"
             if ISDEBUG:
-                resp_msg += f" {traceback.format_exc()}"
-            logging.error(resp_msg)
-            await update.message.reply_text(resp_msg)
+                errmsg += f" {traceback.format_exc()}"
+            logging.error(errmsg)
+            await update.message.reply_text(f"An error occurred with your message: '{inputmsg}'")
     else:
         resp_msg = "Dimmi un'autostrada, ad esempio A10, A12, A7, A1"
         await update.message.reply_text(resp_msg)
