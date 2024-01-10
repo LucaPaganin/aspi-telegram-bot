@@ -28,6 +28,8 @@ except:
 
 ISDEBUG = "DEBUG" in os.environ
 TOKEN = os.environ["TOKEN"]
+MYCHATID = int(os.environ["MY_CHAT_ID"])
+ADMIN_USERNAME = os.environ["ADMIN_USERNAME"]
 
 fetcher = AutomapFetcher()
 
@@ -36,6 +38,8 @@ async def message_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         userinfo = update.effective_user
         logging.info(f"Received new message from user {userinfo}")
         logging.info(f"Chat information {update.effective_chat}")
+        # if userinfo.username != ADMIN_USERNAME:
+        #     await context.bot.send_message(chat_id=MYCHATID, text=f"Received new message from user {userinfo}")
     except:
         logging.warning(f"Problem in retrieving user information")
     
