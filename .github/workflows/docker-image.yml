@@ -1,0 +1,23 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: set image name
+      run: echo "IMAGE_NAME=lucaplawliet/aspide:$(date '+%Y-%m-%dT%H-%M-%S')" >> "$GITHUB_ENV"
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag $IMAGE_NAME
+    - name: Push docker image
+      run: docker push $IMAGE_NAME
+    
