@@ -24,7 +24,7 @@ WORKDIR /usr/src/app
 COPY requirements.txt ./
 
 # Install dependencies.
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy local code to the container image.
 COPY . ./
