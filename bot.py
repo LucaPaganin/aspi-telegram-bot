@@ -28,8 +28,8 @@ except:
 
 ISDEBUG = "DEBUG" in os.environ
 TOKEN = os.environ["TOKEN"]
-MYCHATID = int(os.environ["MY_CHAT_ID"])
-ADMIN_USERNAME = os.environ["ADMIN_USERNAME"]
+# MYCHATID = int(os.environ["MY_CHAT_ID"])
+# ADMIN_USERNAME = os.environ["ADMIN_USERNAME"]
 
 fetcher = AutomapFetcher()
 
