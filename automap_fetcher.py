@@ -6,7 +6,7 @@ from utils import MONTHMAP_ITA_ENG, RoadEvent, validateRoadName, MONTHS, create_
 class AutomapFetcher(object):
     def __init__(self) -> None:
         self.last_update = None
-        self._base_url = os.environ["ASPI_SOURCE_URL"]
+        self._base_url = "https://automap.it"
     
     def makeSyncRequest(self, method, url, **kwargs):
         kwargs["follow_redirects"] = True
